@@ -5,3 +5,7 @@ body {
 .logo {
 	max-height: 100px;
 }
+
+#game-board {
+	background-color: white;
+}
