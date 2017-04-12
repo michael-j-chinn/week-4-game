@@ -1,11 +1,42 @@
 body {
-	background-image: url('../images/1200px-Raymond_James_Stadium02.JPG')
+	background: url('../images/1200px-Raymond_James_Stadium02.JPG') no-repeat;
+	background-size: 100%;
 }
 
 .logo {
-	max-height: 100px;
+	max-height: 150px;
+}
+
+.headshot {
+	max-height: 150px;
 }
 
 #game-board {
 	background-color: white;
+	padding: 10px;
+	border: .5em solid black;
+}
+
+.screen {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+}
+
+.full-center {
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: inline-block;
+	position: absolute;
+}
+
+.font-massive {
+	font-size: 3em;
+}
+
+.thumbnail-inline {
+	display: inline-block;
 }

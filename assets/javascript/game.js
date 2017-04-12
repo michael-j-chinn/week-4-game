@@ -9,14 +9,16 @@ $(document).ready(function() {
 		}
 	}
 
-	function Player(img, position, yardsPerPlay, bigPlayModifier) {
+	function Player(name, img, position, yardsPerPlay, bigPlayModifier) {
+		this.name = name;
 		this.img = img;
 		this.position = img;
 		this.yardsPerPlay = yardsPerPlay;
 		this.bigPlayModifier = bigPlayModifier;
 	}
 
-	function Opponent(img, turnoverModifier, defenseModifier) {
+	function Opponent(name, img, turnoverModifier, defenseModifier) {
+		this.name = name;
 		this.img = img;
 		this.turnoverModifier = turnoverModifier;
 		this.defeated = false;
@@ -44,15 +46,15 @@ $(document).ready(function() {
 			prevPlays: []
 		},
 		opponents: [
-			new Opponent('falcons_logo.png', 7, 1),
-			new Opponent('saints_logo.png', 5, .5),
-			new Opponent('panthers_logo.png', 10, 2)
+			new Opponent('Falcons', 'falcons_logo.png', 7, 1),
+			new Opponent('Saints', 'saints_logo.png', 5, .5),
+			new Opponent('Panthers', 'panthers_logo.png', 10, 2)
 		],
 		players: [
-			new Player('winston_headshot.png', 'Quarterback', 25, 4),
-			new Player('evans_headshot.png', 'Wide Receiver', 25, 3),
-			new Player('martin_headshot.png', 'Running Back', 15, 2),
-			new Player('aguayo_headshot.png', 'Kicker', 5, 1)
+			new Player('Jameis Winston', 'winston_headshot.png', 'Quarterback', 25, 4),
+			new Player('Mike Evans', 'evans_headshot.png', 'Wide Receiver', 25, 3),
+			new Player('Doug Martin', 'martin_headshot.png', 'Running Back', 15, 2),
+			new Player('Roberto Aguayo', 'aguayo_headshot.png', 'Kicker', 5, 1)
 		],
 		player: {},
 		currentOpponent: {},
@@ -69,13 +71,11 @@ $(document).ready(function() {
 			this.gameBoard.empty();
 		},
 		addStartGameButton: function() {
-			var startButtonContainer = $('<div class="text-center">');
-			var startButton = $('<button class="btn btn-primary">').text('Start Game!');
+			var startButton = $('<button class="btn btn-warning btn-lg font-massive full-center">').text('Start Game!');
 
 			startButton.on('click', game.addGamePieces);
-			startButtonContainer.append(startButton);
 
-			game.gameBoard.append(startButtonContainer);
+			game.gameBoard.append(startButton);
 		},
 		removeStartGameButton: function() {
 			game.reset();
@@ -90,13 +90,21 @@ $(document).ready(function() {
 			var playerCntr = $('<div id="players">');
 
 			// Add in the instructions about select opponents
-			playerCntr.append($('<p>').text('Select a player...'));
+			var instructionsCntr = $('<div id="playerSelectInstructions" class="jumbotron">').append($('<h1>').text('Player Selection'));
+			instructionsCntr.append($('<p>').text('Each player has different yards per play and big play chances. Choose wisely!'));
+			playerCntr.append(instructionsCntr);
 
 			// Player chooses a football player. Either runner, passer, kicker, receiver
 			game.players.forEach(function(playerObj, index) {
 				var btn = $('<a>').attr('data-index', index);
-				var img = $('<img>').attr('src', './assets/images/' + playerObj.img).addClass('logo');
-				btn.append(img);
+				var cntr = $('<div class="thumbnail thumbnail-inline">');
+				var caption = $('<div class="caption">');
+				var img = $('<img class="img-thumbnail headshot">').attr('src', './assets/images/' + playerObj.img).addClass('logo');
+
+				caption.html('<h3>' + playerObj.name + '</h3>');
+				cntr.append(img);
+				cntr.append(caption);
+				btn.append(cntr);
 
 				btn.on('click', function () {
 					game.selectPlayer($(this).attr('data-index'));
@@ -112,13 +120,11 @@ $(document).ready(function() {
 		selectPlayer: function (selectedID) {
 			var player = game.players[selectedID];
 			player.select();
-
 			game.player = player;
 		},
 		selectOpponent: function (selectedID) {
 			var opponent = game.opponents[selectedID];
 			opponent.select();
-
 			game.currentOpponent = opponent;
 		},
 		getSelectedOpponent: function () {
@@ -133,7 +139,7 @@ $(document).ready(function() {
 			return selectedOpponent;
 		},
 		removeNonSelectedPlayers: function() {
-			$('#players > p').remove();
+			$('#playerSelectInstructions').remove();
 
 			game.players.forEach(function(playerObj, index) {
 				if (!playerObj.selected) {
@@ -153,14 +159,33 @@ $(document).ready(function() {
 		addOpponentChoices: function () {
 			var opponentCntr = $('<div id="opponents">');
 
-			// Add in the instructions about select opponents
-			opponentCntr.append($('<p>').text('Select an opponent...'));
+			var row1 = $('<div class="row">');
+			var col0 = $('<div class="col-lg-12">');
+			row1.append(col0);
+
+			var row2 = $('<div class="row">');
+			var col1 = $('<div class="col-lg-4">');
+			var col2 = $('<div class="col-lg-4 text-center">');
+			var col3 = $('<div class="col-lg-4">');
+			row2.append(col1, col2, col3);
+
+			var instructionsCntr = $('<div id="opponentSelectInstructions" class="jumbotron">').append($('<h1>').text('Opponent Selection'));
+			instructionsCntr.append($('<p>').text('Each opponent has different defensive skills and turnover chances. Choose wisely!'));
+
+			col0.append(instructionsCntr);
+			col1.append($('#players'));
+			col2.append($('<h1>').text('VS'));
+			col3.append(opponentCntr);
 
 			// Add in each opponent so player can choose who to play
 			game.opponents.forEach(function(opponentObj, index) {
 				var btn = $('<a>').attr('data-index', index);
-				var img = $('<img>').attr('src', './assets/images/' + opponentObj.img).addClass('logo');
-				btn.append(img);
+				var cntr = $('<div class="thumbnail">');
+				var caption = $('<div class="caption">');
+				var img = $('<img class="img-thumbnail headshot">').attr('src', './assets/images/' + opponentObj.img).addClass('logo');
+
+				caption.html('<h3>' + opponentObj.name + '</h3>');
+				btn.append(cntr.append(img, caption));
 
 				btn.on('click', function () {
 					game.selectOpponent($(this).attr('data-index'));
@@ -170,7 +195,8 @@ $(document).ready(function() {
 				opponentCntr.append(btn);
 			});
 
-			game.gameBoard.append(opponentCntr);
+			game.reset();
+			game.gameBoard.append(row1, row2);
 		},
 		initializeSeries: function () {
 			// Create grid system for the series
