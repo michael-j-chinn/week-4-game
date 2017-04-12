@@ -7,6 +7,7 @@ $(document).ready(function() {
 		this.deselect = function() {
 			this.selected = false;
 		}
+		this.html = {};
 	}
 
 	function Player(name, img, position, yardsPerPlay, bigPlayModifier) {
@@ -81,41 +82,42 @@ $(document).ready(function() {
 			game.reset();
 		},
 		addGamePieces: function() {
-			// Get rid of the start button
 			game.removeStartGameButton();
-
 			game.addPlayerChoices();
 		},
 		addPlayerChoices: function () {
-			var playerCntr = $('<div id="players">');
+			var playerCntr = $('<div id="players">').addClass('game-content');
+
+			var instructionRow = game.createBootstrapRow([{class:"col-lg-12"}]);
+			var playerHeadshotRow = game.createBootstrapRow([{class:"col-sm-3"},{class:"col-sm-3"},{class:"col-sm-3"},{class:"col-sm-3"}]);
 
 			// Add in the instructions about select opponents
 			var instructionsCntr = $('<div id="playerSelectInstructions" class="jumbotron">').append($('<h1>').text('Player Selection'));
 			instructionsCntr.append($('<p>').text('Each player has different yards per play and big play chances. Choose wisely!'));
-			playerCntr.append(instructionsCntr);
+			instructionRow.columns[0].append(instructionsCntr);
 
 			// Player chooses a football player. Either runner, passer, kicker, receiver
 			game.players.forEach(function(playerObj, index) {
 				var btn = $('<a>').attr('data-index', index);
-				var cntr = $('<div class="thumbnail thumbnail-inline">');
-				var caption = $('<div class="caption">');
-				var img = $('<img class="img-thumbnail headshot">').attr('src', './assets/images/' + playerObj.img).addClass('logo');
+				var cntr = $('<div class="thumbnail">');
+				var caption = $('<div class="caption text-center">');
+				var img = $('<img class="img-thumbnail">').attr('src', './assets/images/' + playerObj.img).addClass('logo');
 
 				caption.html('<h3>' + playerObj.name + '</h3>');
-				cntr.append(img);
-				cntr.append(caption);
-				btn.append(cntr);
+				btn.append(cntr.append(img, caption));
 
 				btn.on('click', function () {
 					game.selectPlayer($(this).attr('data-index'));
-					game.removeNonSelectedPlayers();
 					game.addOpponentChoices(); 
 				});
 
-				playerCntr.append(btn);
+				playerHeadshotRow.columns[index].append(btn);
+
+				// Add this to the player object for use later on.
+				playerObj.html = cntr;
 			});
 
-			game.gameBoard.append(playerCntr);
+			game.gameBoard.append(playerCntr.append(instructionRow.row, playerHeadshotRow.row));
 		},
 		selectPlayer: function (selectedID) {
 			var player = game.players[selectedID];
@@ -138,15 +140,6 @@ $(document).ready(function() {
 
 			return selectedOpponent;
 		},
-		removeNonSelectedPlayers: function() {
-			$('#playerSelectInstructions').remove();
-
-			game.players.forEach(function(playerObj, index) {
-				if (!playerObj.selected) {
-					$('#players > a[data-index="' + index + '"]').remove();
-				}
-			});
-		},
 		removeSelectedOpponent: function() {
 			$('#opponents > p').remove();
 
@@ -157,32 +150,23 @@ $(document).ready(function() {
 			});
 		},
 		addOpponentChoices: function () {
-			var opponentCntr = $('<div id="opponents">');
+			var opponentCntr = $('<div id="opponents">').addClass('game-content');
 
-			var row1 = $('<div class="row">');
-			var col0 = $('<div class="col-lg-12">');
-			row1.append(col0);
+			var instructionRow = game.createBootstrapRow([{class:"col-sm-12"}]);
+			var vsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
+			var opponentsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
 
-			var row2 = $('<div class="row">');
-			var col1 = $('<div class="col-lg-4">');
-			var col2 = $('<div class="col-lg-4 text-center">');
-			var col3 = $('<div class="col-lg-4">');
-			row2.append(col1, col2, col3);
-
+			// Add instructions on how to choose an opponent
 			var instructionsCntr = $('<div id="opponentSelectInstructions" class="jumbotron">').append($('<h1>').text('Opponent Selection'));
-			instructionsCntr.append($('<p>').text('Each opponent has different defensive skills and turnover chances. Choose wisely!'));
-
-			col0.append(instructionsCntr);
-			col1.append($('#players'));
-			col2.append($('<h1>').text('VS'));
-			col3.append(opponentCntr);
+			instructionsCntr.append($('<p>').text('Each opponent has different defensive toughness and turnover chance. Choose wisely!'));
+			instructionRow.columns[0].append(instructionsCntr);
 
 			// Add in each opponent so player can choose who to play
 			game.opponents.forEach(function(opponentObj, index) {
 				var btn = $('<a>').attr('data-index', index);
 				var cntr = $('<div class="thumbnail">');
-				var caption = $('<div class="caption">');
-				var img = $('<img class="img-thumbnail headshot">').attr('src', './assets/images/' + opponentObj.img).addClass('logo');
+				var caption = $('<div class="caption text-center">');
+				var img = $('<img class="img-thumbnail">').attr('src', './assets/images/' + opponentObj.img).addClass('logo');
 
 				caption.html('<h3>' + opponentObj.name + '</h3>');
 				btn.append(cntr.append(img, caption));
@@ -192,52 +176,37 @@ $(document).ready(function() {
 					game.initializeSeries();
 				});
 
-				opponentCntr.append(btn);
+				opponentsRow.columns[index].append(btn);
+
+				// Add this to the opponent object for use later on.
+				opponentObj.html = cntr;
 			});
 
 			game.reset();
-			game.gameBoard.append(row1, row2);
+			game.gameBoard.append(opponentCntr.append(instructionRow.row, opponentsRow.row));
 		},
 		initializeSeries: function () {
-			// Create grid system for the series
-			game.seriesBoard = $('<div id="series">');
-			var seriesRow = $('<div class="row">');
-			var seriesCol1 = $('<div class="col-lg-4">')
-			var seriesCol2 = $('<div class="col-lg-4">')
-			var seriesCol3 = $('<div class="col-lg-4">')
+			var seriesCntr = $('<div id="series">').addClass('game-content');
 
-			// Get the current container for players and opponents
-			var playersCntr = $('#players');
-			var opponentsCntr = $('#opponents');
+			var vsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
+			var statsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
+			var prevPlaysRow = game.createBootstrapRow([{class:"col-sm-12"}]);
 
-			// Pull the selected opponent out
-			var selectedOpponent = game.getSelectedOpponent();
-			var currentOpponentCntr = $('<div id="current-opponent">');
-			currentOpponentCntr.append(selectedOpponent);
+			// Add the player and selected opponent
+			vsRow.columns[0].append(game.player.html);
+			vsRow.columns[1].append($('<img>').attr('src', './assets/images/vs.png'));
+			vsRow.columns[2].append(game.currentOpponent.html);
 
 			// Add the player and selected opponent to column 1
-			seriesCol1.append(playersCntr, currentOpponentCntr);
+			statsRow.columns[0].append($('<h3>').text('Yards Remaining'), $('<p id="yards-remaining">').text('100'));
+			statsRow.columns[1].append(game.addHikeButton());
+			statsRow.columns[2].append($('<h3>').text('Downs Remaining'), $('<p id="downs-remaining">').text('10'));
 
-			// Add the "Hike!" button to column 2
-			seriesCol2.append(game.addHikeButton());
+			// Add the previous plays tracker
+			prevPlaysRow.columns[0].append(game.initializePreviousPlaysTracker());
 
-			// Add the series tracker to column 3
-			seriesCol3.append(game.addBallPositionTracker());
-
-			// Add the columns back to their row
-			seriesRow.append(seriesCol1, seriesCol2, seriesCol3);
-			game.seriesBoard.append(seriesRow);
-
-			// Add the remaing opponents back and the series container
-			game.gameBoard.append(opponentsCntr, game.seriesBoard);
-
-			game.removeSelectedOpponent();
-		},
-		moveSelectedOpponent: function () {
-			//TODO
-		},
-		moveSelectedPlayer: function () {
-
+			game.reset();
+			game.gameBoard.append(seriesCntr.append(vsRow.row, statsRow.row, prevPlaysRow.row));
 		},
 		addHikeButton: function () {
 			var hikeButtonContainer = $('<div class="text-center">');
@@ -251,17 +220,8 @@ $(document).ready(function() {
 
 			return hikeButtonContainer;
 		},
-		addBallPositionTracker: function () {
-			var trackerCntr = $('<div id="tracker">');
-
-			var html = "<table>" +
-				"<tr><th>Yards Remaining</th><th>Downs Remaining</th></tr>" +
-				"<tr><td>100</td><td>4</td></tr>" +
-				"</table>";
-
-			trackerCntr.html(html);
-
-			return trackerCntr;
+		initializePreviousPlaysTracker: function () {
+			return $('<div id="tracker">').append($('<div>').addClass('play'));
 		},
 		hike: function() {
 			var play = new Play();
@@ -325,35 +285,45 @@ $(document).ready(function() {
 			return (Math.floor(Math.random() * cieling) + 1);
 		},
 		updateBallPositionTracker: function() {
-			var trackerCntr = $('#tracker');
-
-			var playHistory = '';
+			var trackerCntr = $('#tracker').empty();
 
 			game.series.prevPlays.forEach(function(playObj) {
+				var play = $('<div>').addClass('play text-center');
+				var playDetails='';
+
 				if (!playObj.turnover) {
+					playDetails += "Yards gained: " + playObj.yardsGained;
+
 					if (playObj.touchdown) {
-						playHistory += "You scored a touchdown. You win!<br>";
+						playDetails += ". You scored a touchdown. You win!";
 					} 
 
-					playHistory += "Yards gained: " + playObj.yardsGained;
-
 					if (playObj.bigPlay) {
-						playHistory += ". Big play alert!!!";
+						playDetails += ". Big play alert!!!";
 					}
 				} else {
-					playHistory += "Your opponent got a turnover. You lose.";
-				} 
+					playDetails += "Your opponent got a turnover. You lose.";
+				}
 
-				playHistory += "<br>";
+				trackerCntr.append(play.html(playDetails));
 			});
 
-			var html = "<table>" +
-				"<tr><th>Yards Remaining</th><th>Downs Remaining</th></tr>" +
-				"<tr><td>" + game.series.yardsRemaining + "</td><td>" + game.series.downsRemaining + "</td></tr>" +
-				"<tr><td colspan='2'>" + playHistory + "</td></tr>" +
-				"</table>";
+			$('#yards-remaining').text(game.series.yardsRemaining);
+			$('#downs-remaining').text(game.series.downsRemaining);
+		},
+		createBootstrapRow: function(columns) {
+			var rowInfo = {
+				row: $('<div class="row">'),
+				columns: []
+			};
 
-			trackerCntr.html(html);
+			columns.forEach(function(col, index) {
+				var col = $('<div>').addClass(col.class);
+				rowInfo.row.append(col);
+				rowInfo.columns.push(col);
+			});
+
+			return rowInfo;
 		}
 	}
 

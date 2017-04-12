@@ -3,15 +3,12 @@ body {
 	background-size: 100%;
 }
 
-.logo {
-	max-height: 150px;
+#masthead {
+	background-color: white;
+	margin-bottom: 15px;
 }
 
-.headshot {
-	max-height: 150px;
-}
-
-#game-board {
+.game-content {
 	background-color: white;
 	padding: 10px;
 	border: .5em solid black;
@@ -37,6 +34,24 @@ body {
 	font-size: 3em;
 }
 
-.thumbnail-inline {
+.inline-block {
 	display: inline-block;
+}
+
+.logo {
+	max-height: 200px;
+}
+
+#tracker {
+	background-color: black;
+}
+
+.play {
+	min-height: 20px;
+	border: 2px solid white;
+	background-color: green;
+	padding: 10px;
+	color: white;
+	font-weight: bold;
+	font-size: 1.3em;
 }
