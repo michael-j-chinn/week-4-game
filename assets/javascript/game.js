@@ -8,6 +8,10 @@ $(document).ready(function() {
 			this.selected = false;
 		}
 		this.html = {};
+		this.reset = function() {
+			this.selected = false;
+			this.html = {};
+		}
 	}
 
 	function Player(name, img, position, yardsPerPlay, bigPlayModifier) {
@@ -24,6 +28,11 @@ $(document).ready(function() {
 		this.turnoverModifier = turnoverModifier;
 		this.defeated = false;
 		this.defenseModifier = defenseModifier;
+		this.reset = function() {
+			this.selected = false;
+			this.html = {};
+			this.defeated = false;
+		}
 	}
 
 	Player.prototype = new Person();
@@ -44,12 +53,17 @@ $(document).ready(function() {
 		series: {
 			yardsRemaining: 100,
 			downsRemaining: 10,
-			prevPlays: []
+			prevPlays: [],
+			reset: function () {
+				this.yardsRemaining = 100;
+				this.downsRemaining = 10;
+				this.prevPlays = [];
+			}
 		},
 		opponents: [
 			new Opponent('Falcons', 'falcons_logo.png', 7, 1),
 			new Opponent('Saints', 'saints_logo.png', 5, .5),
-			new Opponent('Panthers', 'panthers_logo.png', 10, 2)
+			new Opponent('Panthers', 'panthers_logo.png', 10, 1.25)
 		],
 		players: [
 			new Player('Jameis Winston', 'winston_headshot.png', 'Quarterback', 25, 4),
@@ -60,16 +74,37 @@ $(document).ready(function() {
 		player: {},
 		currentOpponent: {},
 		start: function () {
-			this.gameBoard = $('#' + this.gameBoardId);
-			this.addStartGameButton();
+			game.gameBoard = $('#' + game.gameBoardId);
+			game.gameBoard.empty();
+			game.series.reset();
+			game.player = {};
+			game.currentOpponent = {};
+			game.opponents.forEach(function(o) { o.reset(); });
+			game.players.forEach(function(p) { p.reset(); });
+
+			game.addStartGameButton();
 		},
 		end : function() {
-			// Show game result
+			var screen = $('<div>').addClass('screen');
 
-			// Change button to either next opponent, celebrate, or play again.
+			var playAgainBtn = $('<button id="playAgain">').addClass('btn btn-warning btn-lg font-massive full-center').text('Play Again?');
+			playAgainBtn.on('click', game.start);
+
+			game.gameBoard.append(screen.append(playAgainBtn));
+		},
+		playerLost: function() {
+			return game.series.prevPlays[0].turnover;
+		},
+		playerWon: function() {
+			return game.series.prevPlays[0].touchdown;
+		},
+		remainingOpponentsCount: function() {
+			var count = 0;
+			game.opponents.forEach(function(o){ if (!o.defeated) { count++; }});
+			return count;
 		},
 		reset: function () {
-			this.gameBoard.empty();
+			game.gameBoard.empty();
 		},
 		addStartGameButton: function() {
 			var startButton = $('<button class="btn btn-warning btn-lg font-massive full-center">').text('Start Game!');
@@ -117,6 +152,7 @@ $(document).ready(function() {
 				playerObj.html = cntr;
 			});
 
+			game.reset();
 			game.gameBoard.append(playerCntr.append(instructionRow.row, playerHeadshotRow.row));
 		},
 		selectPlayer: function (selectedID) {
@@ -163,23 +199,25 @@ $(document).ready(function() {
 
 			// Add in each opponent so player can choose who to play
 			game.opponents.forEach(function(opponentObj, index) {
-				var btn = $('<a>').attr('data-index', index);
-				var cntr = $('<div class="thumbnail">');
-				var caption = $('<div class="caption text-center">');
-				var img = $('<img class="img-thumbnail">').attr('src', './assets/images/' + opponentObj.img).addClass('logo');
+				if (!opponentObj.defeated) {
+					var btn = $('<a>').attr('data-index', index);
+					var cntr = $('<div class="thumbnail">');
+					var caption = $('<div class="caption text-center">');
+					var img = $('<img class="img-thumbnail">').attr('src', './assets/images/' + opponentObj.img).addClass('logo');
 
-				caption.html('<h3>' + opponentObj.name + '</h3>');
-				btn.append(cntr.append(img, caption));
+					caption.html('<h3>' + opponentObj.name + '</h3>');
+					btn.append(cntr.append(img, caption));
 
-				btn.on('click', function () {
-					game.selectOpponent($(this).attr('data-index'));
-					game.initializeSeries();
-				});
+					btn.on('click', function () {
+						game.selectOpponent($(this).attr('data-index'));
+						game.initializeSeries();
+					});
 
-				opponentsRow.columns[index].append(btn);
+					opponentsRow.columns[index].append(btn);
 
-				// Add this to the opponent object for use later on.
-				opponentObj.html = cntr;
+					// Add this to the opponent object for use later on.
+					opponentObj.html = cntr;
+				}
 			});
 
 			game.reset();
@@ -225,40 +263,37 @@ $(document).ready(function() {
 		},
 		hike: function() {
 			var play = new Play();
-			var yardsGained = 0;
 			var bigPlayYards = 0;
-			var player = game.player;
-			var opponent = game.currentOpponent;
 
 			// No matter what a down is lost
 			game.series.downsRemaining--;
 
 			// Start with the base yardsPerPlay (ex. 6)
-			yardsGained = player.yardsPerPlay;
+			play.yardsGained = game.player.yardsPerPlay;
 
 			// Roll dice on whether or not a big play will happen (ex. 3% chance)
-			if (game.getRandomNumber(100) <= player.bigPlayModifier) {
+			if (game.getRandomNumber(100) <= game.player.bigPlayModifier) {
 				play.bigPlay = true;
 				// If a big play happens, double yardsPerPlay
-				bigPlayYards = yardsGained * player.bigPlayModifier;
+				bigPlayYards = play.yardsGained * game.player.bigPlayModifier;
 			}
 
 			// Now see how many yards the opponent limits the player.
 			// If the amount is negative, roll for a turnover. If no turnover, the player fails their down,
 			// otherwise, game over.
-			yardsGained = (yardsGained + bigPlayYards) - game.getRandomNumber(yardsGained * opponent.defenseModifier);
+			play.yardsGained = (play.yardsGained + bigPlayYards) - game.getRandomNumber(play.yardsGained * game.currentOpponent.defenseModifier);
 
-			if (yardsGained < 0) {
-				yardsGained = 0;
+			if (play.yardsGained < 0) {
+				play.yardsGained = 0;
 
-				if (game.getRandomNumber(100) <= opponent.turnoverModifier || game.series.downsRemaining <= 0) {
+				if (game.getRandomNumber(100) <= game.currentOpponent.turnoverModifier || game.series.downsRemaining <= 0) {
 					play.turnover = true;
 				}
 			} else {
-				if (yardsGained <= game.series.yardsRemaining)
-					game.series.yardsRemaining -= yardsGained;
+				if (play.yardsGained <= game.series.yardsRemaining)
+					game.series.yardsRemaining -= play.yardsGained;
 				else {
-					yardsGained = game.series.yardsRemaining;
+					play.yardsGained = game.series.yardsRemaining;
 					game.series.yardsRemaining = 0;
 				}
 
@@ -268,18 +303,32 @@ $(document).ready(function() {
 					if (game.series.yardsRemaining <= 0) {
 						game.series.yardsRemaining = 0;
 						play.touchdown = true;
+						game.currentOpponent.defeated = true;
 					}
 				} else {
 					play.turnover = true; // turnover on downs
 				}
 			}
 
-			play.yardsGained = yardsGained;
-
 			game.series.prevPlays.unshift(play);
 
 			// Update game board
 			game.updateBallPositionTracker();
+
+			if (game.playerWon()) {
+				game.nextOpponent();
+			} else if (game.playerLost()) {
+				game.end();
+			}
+		},
+		nextOpponent: function() {
+			if (game.remainingOpponentsCount() > 0) {
+				game.series.reset();
+				game.addOpponentChoices();
+			}
+			else {
+				game.end();
+			}
 		},
 		getRandomNumber: function(cieling) {
 			return (Math.floor(Math.random() * cieling) + 1);
@@ -326,29 +375,6 @@ $(document).ready(function() {
 			return rowInfo;
 		}
 	}
-
-
-
-	// Player starts the game
-
-	// Player chooses a football player. Either runner, passer, kicker, receiver
-
-	// Player must then defeat the 3 other teams in NFC South (Atlanta Falcons, New Orleans Saints, Carolina Panthers)
-	// Player chooses which one to play against first by clicking on their logo
-
-	// Opponent logo is moved the opposing side of the field
-
-	// Player can now click the "Hike!" button
-	// TODO
-
-	// Player continues to hit "Hike!" until they score a touchdown or turnover the ball
-
-	// Each player has base yards per play, big play modifier, and downs remaining
-
-	// Each opponent has % chance to get a turnover which is affected by the players
-	// big play modifier. The higher the big play, the less chance for a turnover.
-
-	// Player wins the division title by defeating all opposing teams
 
 	game.start();
 });
