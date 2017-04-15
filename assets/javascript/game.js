@@ -14,12 +14,14 @@ $(document).ready(function() {
 		}
 	}
 
-	function Player(name, img, position, yardsPerPlay, bigPlayModifier) {
+	function Player(name, img, touchdownGif, turnoverGif, position, yardsPerPlay, bigPlayModifier) {
 		this.name = name;
 		this.img = img;
+		this.touchdownGif = touchdownGif;
 		this.position = img;
 		this.yardsPerPlay = yardsPerPlay;
 		this.bigPlayModifier = bigPlayModifier;
+		this.turnoverGif = turnoverGif;
 	}
 
 	function Opponent(name, img, turnoverModifier, defenseModifier) {
@@ -66,10 +68,10 @@ $(document).ready(function() {
 			new Opponent('Panthers', 'panthers_logo.png', 10, 1.25)
 		],
 		players: [
-			new Player('Jameis Winston', 'winston_headshot.png', 'Quarterback', 25, 4),
-			new Player('Mike Evans', 'evans_headshot.png', 'Wide Receiver', 25, 3),
-			new Player('Doug Martin', 'martin_headshot.png', 'Running Back', 15, 2),
-			new Player('Roberto Aguayo', 'aguayo_headshot.png', 'Kicker', 5, 1)
+			new Player('Winston', 'winston_headshot.png', 'jameis_touchdown.gif', 'jameis_turnover.gif', 'Quarterback', 25, 6),
+			new Player('Evans', 'evans_headshot.png', 'evans_touchdown.gif', 'evans_turnover.gif', 'Wide Receiver', 25, 5),
+			new Player('Martin', 'martin_headshot.png', 'martin_toughdown.gif', 'martin_turnover.gif', 'Running Back', 17, 5),
+			new Player('Aguayo', 'aguayo_headshot.png', 'aguayo_fieldgoal.gif', 'aguayo_missed_fg.gif', 'Kicker', 15, 3)
 		],
 		player: {},
 		currentOpponent: {},
@@ -85,12 +87,20 @@ $(document).ready(function() {
 			game.addStartGameButton();
 		},
 		end : function() {
+			game.gameBoard.empty();
+
 			var screen = $('<div>').addClass('screen');
 
 			var playAgainBtn = $('<button id="playAgain">').addClass('btn btn-warning btn-lg font-massive full-center').text('Play Again?');
 			playAgainBtn.on('click', game.start);
 
 			game.gameBoard.append(screen.append(playAgainBtn));
+
+			if (game.remainingOpponentsCount() == 0) {
+				game.gameBoard.append($('<img>').addClass('img-responsive center-block').attr('src', './assets/images/win.jpg'));
+			}
+
+			timer.reset();
 		},
 		playerLost: function() {
 			return game.series.prevPlays[0].turnover;
@@ -124,10 +134,10 @@ $(document).ready(function() {
 			var playerCntr = $('<div id="players">').addClass('game-content');
 
 			var instructionRow = game.createBootstrapRow([{class:"col-lg-12"}]);
-			var playerHeadshotRow = game.createBootstrapRow([{class:"col-sm-3"},{class:"col-sm-3"},{class:"col-sm-3"},{class:"col-sm-3"}]);
+			var playerHeadshotRow = game.createBootstrapRow([{class:"col-sm-3 col-xs-6"},{class:"col-sm-3 col-xs-6"},{class:"col-sm-3 col-xs-6"},{class:"col-sm-3 col-xs-6"}]);
 
 			// Add in the instructions about select opponents
-			var instructionsCntr = $('<div id="playerSelectInstructions" class="jumbotron">').append($('<h1>').text('Player Selection'));
+			var instructionsCntr = $('<div id="playerSelectInstructions" class="well well-sm">').append($('<h1>').text('Player Selection'));
 			instructionsCntr.append($('<p>').text('Each player has different yards per play and big play chances. Choose wisely!'));
 			instructionRow.columns[0].append(instructionsCntr);
 
@@ -138,7 +148,7 @@ $(document).ready(function() {
 				var caption = $('<div class="caption text-center">');
 				var img = $('<img class="img-thumbnail">').attr('src', './assets/images/' + playerObj.img).addClass('logo');
 
-				caption.html('<h3>' + playerObj.name + '</h3>');
+				caption.html('<strong>' + playerObj.name + '</strong>');
 				btn.append(cntr.append(img, caption));
 
 				btn.on('click', function () {
@@ -188,12 +198,11 @@ $(document).ready(function() {
 		addOpponentChoices: function () {
 			var opponentCntr = $('<div id="opponents">').addClass('game-content');
 
-			var instructionRow = game.createBootstrapRow([{class:"col-sm-12"}]);
-			var vsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
-			var opponentsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
+			var instructionRow = game.createBootstrapRow([{class:"col-lg-12"}]);
+			var opponentsRow = game.createBootstrapRow([{class:"col-xs-6 col-sm-4"},{class:"col-xs-6 col-sm-4"},{class:"col-xs-6 col-sm-4"}]);
 
 			// Add instructions on how to choose an opponent
-			var instructionsCntr = $('<div id="opponentSelectInstructions" class="jumbotron">').append($('<h1>').text('Opponent Selection'));
+			var instructionsCntr = $('<div id="opponentSelectInstructions" class="well well-sm">').append($('<h1>').text('Opponent Selection'));
 			instructionsCntr.append($('<p>').text('Each opponent has different defensive toughness and turnover chance. Choose wisely!'));
 			instructionRow.columns[0].append(instructionsCntr);
 
@@ -205,7 +214,7 @@ $(document).ready(function() {
 					var caption = $('<div class="caption text-center">');
 					var img = $('<img class="img-thumbnail">').attr('src', './assets/images/' + opponentObj.img).addClass('logo');
 
-					caption.html('<h3>' + opponentObj.name + '</h3>');
+					caption.html('<strong>' + opponentObj.name + '</strong>');
 					btn.append(cntr.append(img, caption));
 
 					btn.on('click', function () {
@@ -226,40 +235,42 @@ $(document).ready(function() {
 		initializeSeries: function () {
 			var seriesCntr = $('<div id="series">').addClass('game-content');
 
-			var vsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
-			var statsRow = game.createBootstrapRow([{class:"col-sm-4"},{class:"col-sm-4"},{class:"col-sm-4"}]);
-			var prevPlaysRow = game.createBootstrapRow([{class:"col-sm-12"}]);
+			var statsRow = game.createBootstrapRow([{class:"col-xs-6 col-sm-4"},{class:"col-xs-6 col-sm-4 col-sm-push-4"},{class:"col-xs-12 col-sm-4 col-sm-pull-4"}]);
+			var statsSubRow = game.createBootstrapRow([{class:"col-xs-12"},{class:"col-xs-6 col-md-6"},{class:"col-xs-6 col-md-6"}]);
+			var actionRow = game.createBootstrapRow([{class:"col-xs-12"}]);
+			var prevPlaysRow = game.createBootstrapRow([{class:"col-xs-12"}]);
 
 			// Add the player and selected opponent
-			vsRow.columns[0].append(game.player.html);
-			vsRow.columns[1].append($('<img>').attr('src', './assets/images/vs.png'));
-			vsRow.columns[2].append(game.currentOpponent.html);
+			statsRow.columns[0].append($('<div>').addClass('text-center').append($('<h2>').text('Home'), $('<img>').addClass('thumbnail img-responsive center-block logo').attr('src', './assets/images/' + game.player.img), $('<h3>').text(game.player.name)));
+			statsRow.columns[1].append($('<div>').addClass('text-center').append($('<h2>').text('Away'), $('<img>').addClass('thumbnail img-responsive center-block logo').attr('src', './assets/images/' + game.currentOpponent.img), $('<h3>').text(game.currentOpponent.name)));
+			statsRow.columns[2].append(statsSubRow.row);
 
-			// Add the player and selected opponent to column 1
-			statsRow.columns[0].append($('<h3>').text('Yards Remaining'), $('<p id="yards-remaining">').text('100'));
-			statsRow.columns[1].append(game.addHikeButton());
-			statsRow.columns[2].append($('<h3>').text('Downs Remaining'), $('<p id="downs-remaining">').text('10'));
+			statsSubRow.columns[0].append($('<div id="game-clock">').addClass('text-center').append($('<span>').text('05:00')));
+			statsSubRow.columns[1].append($('<div>').addClass('text-center number-container').append($('<h3>').text('To Go'), $('<div id="yards-remaining">').text('100')));
+			statsSubRow.columns[2].append($('<div>').addClass('text-center number-container').append($('<h3>').text('Downs'), $('<div id="downs-remaining">').text('10')));
+
+			// Add hike button
+			actionRow.columns[0].append(game.addHikeButton());
 
 			// Add the previous plays tracker
 			prevPlaysRow.columns[0].append(game.initializePreviousPlaysTracker());
 
 			game.reset();
-			game.gameBoard.append(seriesCntr.append(vsRow.row, statsRow.row, prevPlaysRow.row));
+			game.gameBoard.append(seriesCntr.append(statsRow.row, actionRow.row, prevPlaysRow.row));
+
+			timer.start();
 		},
 		addHikeButton: function () {
-			var hikeButtonContainer = $('<div class="text-center">');
-			var hikeButton = $('<button class="btn btn-primary">').text('Hike!');
+			var hikeButton = $('<button id="hike" class="btn btn-warning btn-action btn-responsive">').text('Hike!');
 
 			hikeButton.on('click', function () {
 				game.hike();
 			});
 
-			hikeButtonContainer.append(hikeButton);
-
-			return hikeButtonContainer;
+			return hikeButton;
 		},
 		initializePreviousPlaysTracker: function () {
-			return $('<div id="tracker">').append($('<div>').addClass('play'));
+			return $('<div id="tracker">');
 		},
 		hike: function() {
 			var play = new Play();
@@ -316,12 +327,32 @@ $(document).ready(function() {
 			game.updateBallPositionTracker();
 
 			if (game.playerWon()) {
-				game.nextOpponent();
+				timer.stop();
+				game.showTouchdownGif();
 			} else if (game.playerLost()) {
-				game.end();
+				game.showTurnoverGif();
+				timer.stop();
 			}
 		},
+		showTouchdownGif: function() {
+			$('#tracker').prepend($('<div>').append($('<img>').attr('src', './assets/images/' + game.player.touchdownGif).addClass('img-responsive center-block')));
+
+			var nextButton = $('<button id="next" class="btn btn-warning btn-action btn-responsive">').text('Next Opponent');
+			nextButton.click(game.nextOpponent);
+
+			$('#hike').parent().empty().append(nextButton);
+		},
+		showTurnoverGif: function() {
+			$('#tracker').prepend($('<div>').append($('<img>').attr('src', './assets/images/' + game.player.turnoverGif).addClass('img-responsive center-block')));
+
+			var endBtn = $('<button id="end" class="btn btn-warning btn-action btn-responsive">').text('End');
+			endBtn.click(game.end);
+
+			$('#hike').parent().empty().append(endBtn);
+		},		
 		nextOpponent: function() {
+			timer.reset();
+
 			if (game.remainingOpponentsCount() > 0) {
 				game.series.reset();
 				game.addOpponentChoices();
@@ -341,11 +372,11 @@ $(document).ready(function() {
 				var playDetails='';
 
 				if (!playObj.turnover) {
-					playDetails += "Yards gained: " + playObj.yardsGained;
-
 					if (playObj.touchdown) {
-						playDetails += ". You scored a touchdown. You win!";
+						playDetails += "<h1>Touchdown!</h1>";
 					} 
+
+					playDetails += "Yards gained: " + playObj.yardsGained;
 
 					if (playObj.bigPlay) {
 						playDetails += ". Big play alert!!!";
@@ -373,6 +404,44 @@ $(document).ready(function() {
 			});
 
 			return rowInfo;
+		}
+	}
+
+	var timerIntervalId;
+	var timer = {
+		time: 300,
+		start: function() {
+			timerIntervalId = setInterval(timer.count, 1000);
+		},
+		stop: function() {
+			clearInterval(timerIntervalId);
+		},
+		reset: function() {
+			timer.stop();
+			timer.time = 300;
+			$('#game-clock > span').text('05:00');
+		},
+		count: function() {
+			timer.time--;
+
+			$('#game-clock > span').text(timer.formatTime(timer.time));
+		},
+		formatTime: function(t) {
+			var mins = Math.floor(t / 60);
+			var secs = t - (mins * 60);
+
+			if (secs < 10) {
+		      secs = "0" + secs;
+		    }
+
+		    if (mins === 0) {
+		      mins = "00";
+		    }
+		    else if (mins < 10) {
+		      mins = "0" + mins;
+		    }
+
+		    return mins + ":" + secs;
 		}
 	}
 
