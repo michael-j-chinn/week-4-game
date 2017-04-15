@@ -5,15 +5,15 @@ $(document).ready(function() {
 		gameBoard: {},
 		series: {},
 		opponents: [
-			new Opponent('Falcons', 'falcons_logo.png', 7, 1),
-			new Opponent('Saints', 'saints_logo.png', 5, .5),
-			new Opponent('Panthers', 'panthers_logo.png', 10, 1.25)
+			new Opponent('Falcons', 'falcons_logo_opt.png', 7, 1),
+			new Opponent('Saints', 'saints_logo_opt.png', 5, .5),
+			new Opponent('Panthers', 'panthers_logo_opt.png', 10, 1.25)
 		],
 		players: [
-			new Player('Winston', 'winston_headshot.png', 'jameis_touchdown.gif', 'jameis_turnover.gif', 'Quarterback', 25, 6),
-			new Player('Evans', 'evans_headshot.png', 'evans_touchdown.gif', 'evans_turnover.gif', 'Wide Receiver', 25, 5),
-			new Player('Martin', 'martin_headshot.png', 'martin_toughdown.gif', 'martin_turnover.gif', 'Running Back', 17, 5),
-			new Player('Aguayo', 'aguayo_headshot.png', 'aguayo_fieldgoal.gif', 'aguayo_missed_fg.gif', 'Kicker', 15, 3)
+			new Player('Winston', 'winston_headshot_opt.png', 'jameis_touchdown_opt.gif', 'jameis_turnover_opt.gif', 25, 6),
+			new Player('Evans', 'evans_headshot_opt.png', 'evans_touchdown_opt.gif', 'evans_turnover_opt.gif', 25, 5),
+			new Player('Martin', 'martin_headshot_opt.png', 'martin_toughdown_opt.gif', 'martin_turnover_opt.gif', 17, 5),
+			new Player('Aguayo', 'aguayo_headshot_opt.png', 'aguayo_fieldgoal_opt.gif', 'aguayo_missed_fg_opt.gif', 15, 3)
 		],
 		start: function () {
 			// Grab a reference to the static game board container and make sure it's empty.
@@ -42,7 +42,7 @@ $(document).ready(function() {
 
 			// If we arrived here because the player won, show a winning images
 			if (game.remainingOpponentsCount() == 0) {
-				game.gameBoard.append($('<img>').addClass('img-responsive center-block').attr('src', './assets/images/win.jpg'));
+				game.gameBoard.append($('<img>').addClass('img-responsive center-block').attr('src', './assets/images/win_opt.jpg'));
 			}
 
 			timer.reset();

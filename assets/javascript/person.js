@@ -11,11 +11,10 @@ function Person() {
 	}
 }
 
-function Player(name, img, touchdownGif, turnoverGif, position, yardsPerPlay, bigPlayModifier) {
+function Player(name, img, touchdownGif, turnoverGif, yardsPerPlay, bigPlayModifier) {
 	this.name = name;
 	this.img = img;
 	this.touchdownGif = touchdownGif;
-	this.position = img;
 	this.yardsPerPlay = yardsPerPlay;
 	this.bigPlayModifier = bigPlayModifier;
 	this.turnoverGif = turnoverGif;
