@@ -27,18 +27,24 @@ function Series(player, opponent, game) {
 	this.showTouchdownGif = function() {
 		$('#tracker').prepend($('<div>').append($('<img>').attr('src', './assets/images/' + this.player.touchdownGif).addClass('img-responsive center-block')));
 
-		var nextButton = $('<button id="next" class="btn btn-warning btn-action btn-responsive">').text('Next Opponent');
+		var nextButton = $('<button id="next" class="btn btn-success btn-action btn-responsive">').text('You won! Click here for next opponent.');
 		nextButton.click(game.nextOpponent);
 
 		$('#hike').parent().empty().append(nextButton);
+		nextButton.hide();
+
+		setTimeout(function() { nextButton.slideDown();} , 5000);
 	}
 	this.showTurnoverGif = function() {
 		$('#tracker').prepend($('<div>').append($('<img>').attr('src', './assets/images/' + this.player.turnoverGif).addClass('img-responsive center-block')));
 
-		var endBtn = $('<button id="end" class="btn btn-warning btn-action btn-responsive">').text('End');
+		var endBtn = $('<button id="end" class="btn btn-danger btn-action btn-responsive">').text('You lost! Click here to end game.');
 		endBtn.click(game.end);
 
 		$('#hike').parent().empty().append(endBtn);
+		endBtn.hide();
+
+		setTimeout(function() { endBtn.slideDown();} , 5000);
 	}
 	this.updatePlayHistory = function() {
 		var trackerCntr = $('#tracker').empty();
