@@ -174,4 +174,8 @@ body {
 	#masthead img {
 		height: 30px;
 	}
+
+	.series-person {
+		padding: 0 20px;
+	}
 }

@@ -126,8 +126,8 @@ function Series(player, opponent, game) {
 	var prevPlaysRow = bootHelper.createRow([{class:"col-xs-12"}]);
 
 	// Add the player and selected opponent
-	statsRow.columns[0].append($('<div>').addClass('text-center').append($('<h2>').text('Home'), $('<img>').addClass('thumbnail img-responsive center-block logo').attr('src', './assets/images/' + this.player.img), $('<h3>').text(this.player.name)));
-	statsRow.columns[1].append($('<div>').addClass('text-center').append($('<h2>').text('Away'), $('<img>').addClass('thumbnail img-responsive center-block logo').attr('src', './assets/images/' + this.opponent.img), $('<h3>').text(this.opponent.name)));
+	statsRow.columns[0].append($('<div>').addClass('text-center series-person').append($('<h2>').text('Home'), $('<img>').addClass('thumbnail img-responsive center-block logo').attr('src', './assets/images/' + this.player.img), $('<h3>').text(this.player.name)));
+	statsRow.columns[1].append($('<div>').addClass('text-center series-person').append($('<h2>').text('Away'), $('<img>').addClass('thumbnail img-responsive center-block logo').attr('src', './assets/images/' + this.opponent.img), $('<h3>').text(this.opponent.name)));
 	statsRow.columns[2].append(statsSubRow.row);
 
 	statsSubRow.columns[0].append($('<div id="game-clock">').addClass('text-center').append($('<span>').text('05:00')));
